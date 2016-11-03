@@ -266,6 +266,7 @@
     <module>camel-spring-redis-starter</module>
     <module>camel-spring-security-starter</module>
     <module>camel-spring-starter</module>
+    <module>camel-spring-web-starter</module>
     <module>camel-spring-ws-starter</module>
     <module>camel-sql-starter</module>
     <module>camel-ssh-starter</module>
