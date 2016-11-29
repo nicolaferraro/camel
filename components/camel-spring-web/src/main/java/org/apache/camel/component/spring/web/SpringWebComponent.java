@@ -19,15 +19,11 @@ import org.apache.camel.util.FileUtil;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.URISupport;
 import org.apache.camel.util.UnsafeUriCharactersEncoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  */
 public class SpringWebComponent extends HttpCommonComponent implements RestConsumerFactory, RestApiConsumerFactory {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SpringWebComponent.class);
 
     public SpringWebComponent() {
         super(SpringWebEndpoint.class);
@@ -49,17 +45,28 @@ public class SpringWebComponent extends HttpCommonComponent implements RestConsu
         URI httpUri = URISupport.createRemainingURI(new URI(UnsafeUriCharactersEncoder.encodeHttpURI(uri)), parameters);
 
 
-        return new SpringWebEndpoint(uri, this, httpUri);
+        SpringWebEndpoint endpoint = new SpringWebEndpoint(uri, this, httpUri);
+        setProperties(endpoint, parameters);
+
+        return endpoint;
     }
 
     @Override
     public void connect(HttpConsumer consumer) {
-        CamelHandlerMapping.getInstance().connect(consumer);
+        getHandlerMapping().connect(consumer);
     }
 
     @Override
     public void disconnect(HttpConsumer consumer) {
-        CamelHandlerMapping.getInstance().disconnect(consumer);
+        getHandlerMapping().disconnect(consumer);
+    }
+
+    private CamelHandlerMapping getHandlerMapping() {
+        CamelHandlerMapping mapping = getCamelContext().getRegistry().lookupByNameAndType("camelHandlerMapping", CamelHandlerMapping.class);
+        if (mapping == null) {
+            throw new IllegalStateException("No bean named 'camelHandlerMapping' found in the registry");
+        }
+        return mapping;
     }
 
     @Override

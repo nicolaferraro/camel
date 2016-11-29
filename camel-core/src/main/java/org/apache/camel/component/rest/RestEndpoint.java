@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 @UriEndpoint(scheme = "rest", title = "REST", syntax = "rest:method:path:uriTemplate", label = "core,rest", lenientProperties = true)
 public class RestEndpoint extends DefaultEndpoint {
 
-    public static final String[] DEFAULT_REST_CONSUMER_COMPONENTS = new String[]{"coap", "netty-http", "netty4-http", "jetty", "restlet", "servlet", "spark-java", "undertow"};
+    public static final String[] DEFAULT_REST_CONSUMER_COMPONENTS = new String[]{"coap", "netty-http", "netty4-http", "jetty", "restlet", "servlet", "spark-java", "spring-web", "undertow"};
     public static final String[] DEFAULT_REST_PRODUCER_COMPONENTS = new String[]{"http", "http4", "netty4-http", "jetty", "restlet", "undertow"};
     public static final String DEFAULT_API_COMPONENT_NAME = "swagger";
     public static final String RESOURCE_PATH = "META-INF/services/org/apache/camel/rest/";

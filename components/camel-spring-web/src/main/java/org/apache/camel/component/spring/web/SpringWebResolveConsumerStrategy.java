@@ -53,12 +53,6 @@ public class SpringWebResolveConsumerStrategy extends HttpServletResolveConsumer
             answer = best.getConsumer();
         }
 
-        if (answer == null) {
-            // fallback to default
-            answer = super.resolve(request, consumers);
-        }
-        // TODO fix the call to super, the path is empty
-
         return answer;
     }
 }

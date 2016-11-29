@@ -36,7 +36,7 @@ public class SpringWebHttpBinding extends DefaultHttpBinding {
     protected void populateRequestParameters(HttpServletRequest request, HttpMessage message) throws Exception {
         super.populateRequestParameters(request, message);
 
-        String path = request.getPathInfo();
+        String path = request.getServletPath();
         if (path == null) {
             return;
         }

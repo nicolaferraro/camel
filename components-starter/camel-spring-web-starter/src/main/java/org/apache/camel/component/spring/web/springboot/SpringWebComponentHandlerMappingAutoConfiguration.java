@@ -17,20 +17,27 @@
 package org.apache.camel.component.spring.web.springboot;
 
 import org.apache.camel.component.spring.web.CamelHandlerMapping;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- *
+ * Additional auto-configuration beans for the starter module.
  */
 @Configuration
-@ConditionalOnBean(type = "org.apache.camel.springboot.CamelAutoConfiguration")
+@ConditionalOnBean(type = "org.apache.camel.spring.boot.CamelAutoConfiguration")
+@AutoConfigureAfter(name = "org.apache.camel.spring.boot.CamelAutoConfiguration")
+@AutoConfigureBefore(SpringWebComponentAutoConfiguration.class)
 public class SpringWebComponentHandlerMappingAutoConfiguration {
 
-    @Bean
+    /**
+     * Binds the bridge between Spring servlet and camel routes to the application context.
+     */
+    @Bean(name = "camelHandlerMapping")
     public CamelHandlerMapping camelHandlerMapping() {
-        return CamelHandlerMapping.getInstance();
+        return new CamelHandlerMapping();
     }
 
 }

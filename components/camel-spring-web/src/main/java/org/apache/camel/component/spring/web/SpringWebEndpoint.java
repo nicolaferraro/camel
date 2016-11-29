@@ -7,9 +7,7 @@ import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.http.common.HttpCommonEndpoint;
-import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
-import org.apache.camel.spi.UriPath;
 
 /**
  *
@@ -19,12 +17,8 @@ import org.apache.camel.spi.UriPath;
 public class SpringWebEndpoint extends HttpCommonEndpoint {
 
 
-    @UriPath(label = "consumer") @Metadata(required = "true")
-    private String contextPath;
-
     public SpringWebEndpoint(String endPointURI, SpringWebComponent component, URI httpUri) throws URISyntaxException {
         super(endPointURI, component, httpUri);
-        this.contextPath = httpUri.getPath();
     }
 
     @Override
@@ -37,10 +31,4 @@ public class SpringWebEndpoint extends HttpCommonEndpoint {
         return new SpringWebConsumer(this, processor);
     }
 
-    /**
-     * The context path
-     */
-    public void setContextPath(String contextPath) {
-        this.contextPath = contextPath;
-    }
 }
