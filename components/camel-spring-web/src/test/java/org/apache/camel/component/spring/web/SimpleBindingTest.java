@@ -39,6 +39,9 @@ public class SimpleBindingTest {
     @EndpointInject(uri = "mock:myapp")
     MockEndpoint myAppEndpoint;
 
+    @EndpointInject(uri = "mock:myapp2")
+    MockEndpoint myApp2Endpoint;
+
     @EndpointInject(uri = "mock:echo")
     MockEndpoint echoEndpoint;
 
@@ -54,6 +57,21 @@ public class SimpleBindingTest {
 
         for (Exchange exchange : myAppEndpoint.getExchanges()) {
             assertEquals("Bye Camel!", exchange.getIn().getBody(String.class));
+        }
+    }
+
+    @Test
+    public void testSimpleEndpoint2() throws Exception {
+        myApp2Endpoint.expectedHeaderReceived(Exchange.HTTP_METHOD, "POST");
+
+        String response = template.requestBody("http://localhost:" + port + "/myapp2", "Hello Camel!", String.class);
+        assertNotNull(response);
+        assertEquals("Set Body Camel!", response);
+
+        myApp2Endpoint.assertIsSatisfied();
+
+        for (Exchange exchange : myApp2Endpoint.getExchanges()) {
+            assertEquals("Set Body Camel!", exchange.getIn().getBody(String.class));
         }
     }
 
@@ -82,6 +100,7 @@ public class SimpleBindingTest {
                 @Override
                 public void configure() throws Exception {
                     from("spring-web:/myapp").transform().constant("Bye Camel!").to("mock:myapp");
+                    from("spring-web:/myapp2").setBody().constant("Set Body Camel!").to("mock:myapp2");
                     from("spring-web:/echo").convertBodyTo(String.class).to("mock:echo");
                 }
             };

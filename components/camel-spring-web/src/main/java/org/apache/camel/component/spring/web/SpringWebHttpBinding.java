@@ -22,6 +22,9 @@ import org.apache.camel.http.common.DefaultHttpBinding;
 import org.apache.camel.http.common.HttpCommonEndpoint;
 import org.apache.camel.http.common.HttpMessage;
 
+/**
+ * A custom HttpBinding taking into account some features of the requests from spring web.
+ */
 public class SpringWebHttpBinding extends DefaultHttpBinding {
 
     public SpringWebHttpBinding() {
