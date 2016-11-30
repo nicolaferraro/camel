@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.camel.component.spring.web;
+package org.apache.camel.component.spring.web.rest;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.ProducerTemplate;
@@ -42,7 +42,7 @@ import static org.junit.Assert.assertEquals;
 @DirtiesContext
 @ContextConfiguration(classes = {TestAutoConfiguration.class, CamelAutoConfiguration.class})
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class RestBindingTest {
+public class RestBindingParameterTest {
 
     @Value("${local.server.port}")
     protected Integer port;
