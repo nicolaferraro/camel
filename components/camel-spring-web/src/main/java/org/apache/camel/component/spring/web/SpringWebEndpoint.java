@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import org.apache.camel.Consumer;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.http.common.HttpBinding;
 import org.apache.camel.http.common.HttpCommonEndpoint;
 import org.apache.camel.spi.UriEndpoint;
 
@@ -32,9 +33,34 @@ import org.apache.camel.spi.UriEndpoint;
         consumerOnly = true, consumerClass = SpringWebConsumer.class, label = "http")
 public class SpringWebEndpoint extends HttpCommonEndpoint {
 
+    private HttpBinding binding;
 
     public SpringWebEndpoint(String endPointURI, SpringWebComponent component, URI httpUri) throws URISyntaxException {
         super(endPointURI, component, httpUri);
+    }
+
+    @Override
+    public HttpBinding getHttpBinding() {
+        // make sure we include spring-web variant of the http binding
+        if (this.binding == null) {
+            this.binding = new SpringWebHttpBinding();
+            this.binding.setTransferException(isTransferException());
+            if (getComponent() != null) {
+                this.binding.setAllowJavaSerializedObject(getComponent().isAllowJavaSerializedObject());
+            }
+            this.binding.setHeaderFilterStrategy(getHeaderFilterStrategy());
+            this.binding.setEagerCheckContentAvailable(isEagerCheckContentAvailable());
+            this.binding.setMapHttpMessageBody(isMapHttpMessageBody());
+            this.binding.setMapHttpMessageHeaders(isMapHttpMessageHeaders());
+            this.binding.setMapHttpMessageFormUrlEncodedBody(isMapHttpMessageFormUrlEncodedBody());
+        }
+        return this.binding;
+    }
+
+    @Override
+    public void setHttpBinding(HttpBinding binding) {
+        super.setHttpBinding(binding);
+        this.binding = binding;
     }
 
     @Override
