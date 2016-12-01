@@ -12,7 +12,9 @@ public class SampleRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        rest().get("/rest").produces("text/plain").route().transform().constant("Hello");
+        restConfiguration().apiContextPath("/api-docs").apiContextListing(true).enableCORS(true);
+
+        rest().get("/rest").description("Hello").produces("text/plain").route().transform().constant("Hello");
 
 
         from("spring-web:/simple").transform().constant("Hello 2");
