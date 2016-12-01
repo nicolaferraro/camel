@@ -17,7 +17,11 @@
 package org.apache.camel.catalog;
 
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Properties;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 /**
  * To get the version of this catalog.
@@ -59,6 +63,31 @@ public class VersionHelper {
                 if (version == null) {
                     version = aPackage.getSpecificationVersion();
                 }
+            }
+        }
+
+        // read the implementation version from the manifest file (useful before packaging)
+        if (version == null) {
+            try {
+                Enumeration<URL> manifestURLs = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+                while (manifestURLs.hasMoreElements()) {
+                    URL manifestURL = manifestURLs.nextElement();
+                    try (InputStream in = manifestURL.openStream()) {
+                        Manifest manifest = new Manifest(in);
+                        Attributes attr = manifest.getMainAttributes();
+                        String module = attr.getValue("Bundle-Name");
+
+                        if ("camel-catalog".equals(module)) {
+                            String version = attr.getValue("Bundle-Version");
+                            if (version != null) {
+                                this.version = version.trim();
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                // suppress
             }
         }
 

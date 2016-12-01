@@ -16,9 +16,14 @@
  */
 package org.apache.camel.support;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 import org.apache.camel.ServiceStatus;
 import org.apache.camel.StatefulService;
@@ -331,6 +336,32 @@ public abstract class ServiceSupport implements StatefulService {
                 if (version == null) {
                     version = aPackage.getSpecificationVersion();
                 }
+            }
+        }
+
+        // read the implementation version from the manifest file (useful before packaging)
+        if (version == null) {
+            try {
+                Enumeration<URL> manifestURLs = getClass().getClassLoader().getResources("META-INF/MANIFEST.MF");
+                while (manifestURLs.hasMoreElements()) {
+                    URL manifestURL = manifestURLs.nextElement();
+                    try (InputStream in = manifestURL.openStream()) {
+                        Manifest manifest = new Manifest(in);
+                        Attributes attr = manifest.getMainAttributes();
+                        String module = attr.getValue("Bundle-Name");
+
+                        if ("camel-core".equals(module)) {
+                            String version = attr.getValue("Bundle-Version");
+                            if (version != null) {
+                                this.version = version.trim();
+                                break;
+                            }
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                LOG.warn("Error while reading the Camel version from the manifest file: {}", e.getMessage());
+                LOG.debug("Exception thrown while reading the manifest", e);
             }
         }
 
