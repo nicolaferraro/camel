@@ -32,6 +32,12 @@ public class HttpServletResolveConsumerStrategy implements ServletResolveConsume
         if (path == null) {
             return null;
         }
+
+        HttpConsumer answer = doResolve(request, consumers, path);
+        return answer;
+    }
+
+    protected HttpConsumer doResolve(HttpServletRequest request, Map<String, HttpConsumer> consumers, String path) {
         HttpConsumer answer = consumers.get(path);
 
         if (answer == null) {

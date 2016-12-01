@@ -35,7 +35,7 @@ public class SpringWebResolveConsumerStrategy extends HttpServletResolveConsumer
     public HttpConsumer resolve(HttpServletRequest request, Map<String, HttpConsumer> consumers) {
         HttpConsumer answer = null;
 
-        String path = request.getRequestURI();
+        String path = SpringWebUtil.getRequestedPath(request);
         if (path == null) {
             return null;
         }
@@ -69,6 +69,12 @@ public class SpringWebResolveConsumerStrategy extends HttpServletResolveConsumer
             answer = best.getConsumer();
         }
 
+        if (answer == null) {
+            // fallback to default
+            answer = this.doResolve(request, consumers, path);
+        }
+
         return answer;
     }
+
 }

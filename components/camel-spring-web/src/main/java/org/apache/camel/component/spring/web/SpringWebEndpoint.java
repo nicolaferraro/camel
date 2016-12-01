@@ -24,19 +24,25 @@ import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.http.common.HttpBinding;
 import org.apache.camel.http.common.HttpCommonEndpoint;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
+import org.apache.camel.spi.UriPath;
 
 /**
  * The camel-spring-web consumer-only endpoint.
  */
-@UriEndpoint(scheme = "spring-web", extendsScheme = "http", title = "Spring Web", syntax = "spring-web:path",
+@UriEndpoint(scheme = "spring-web", extendsScheme = "http", title = "Spring Web", syntax = "spring-web:contextPath",
         consumerOnly = true, consumerClass = SpringWebConsumer.class, label = "http")
 public class SpringWebEndpoint extends HttpCommonEndpoint {
 
     private HttpBinding binding;
 
+    @UriPath(label = "consumer") @Metadata(required = "true")
+    private String contextPath;
+
     public SpringWebEndpoint(String endPointURI, SpringWebComponent component, URI httpUri) throws URISyntaxException {
         super(endPointURI, component, httpUri);
+        this.contextPath = httpUri.getPath();
     }
 
     @Override
@@ -73,4 +79,10 @@ public class SpringWebEndpoint extends HttpCommonEndpoint {
         return new SpringWebConsumer(this, processor);
     }
 
+    /**
+     * The context path.
+     */
+    public void setContextPath(String contextPath) {
+        this.contextPath = contextPath;
+    }
 }

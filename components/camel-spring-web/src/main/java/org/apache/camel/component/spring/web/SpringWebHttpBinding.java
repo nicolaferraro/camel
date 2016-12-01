@@ -51,7 +51,7 @@ public class SpringWebHttpBinding extends DefaultHttpBinding {
     protected void populateRequestParameters(HttpServletRequest request, HttpMessage message) throws Exception {
         super.populateRequestParameters(request, message);
 
-        String path = request.getRequestURI();
+        String path = getRawPath(request);
         if (path == null) {
             return;
         }
@@ -87,6 +87,11 @@ public class SpringWebHttpBinding extends DefaultHttpBinding {
     private boolean useRestMatching(String path) {
         // only need to do rest matching if using { } placeholders
         return path.indexOf('{') > -1;
+    }
+
+    @Override
+    protected String getRawPath(HttpServletRequest request) {
+        return SpringWebUtil.getRequestedPath(request);
     }
 
     @Override
