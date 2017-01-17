@@ -29,6 +29,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +38,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -347,7 +349,7 @@ public class SpringBootAutoConfigurationMojo extends AbstractMojo {
         prefix = prefix.toLowerCase(Locale.US);
         javaClass.addAnnotation("org.springframework.boot.context.properties.ConfigurationProperties").setStringValue("prefix", prefix);
 
-        Set<JavaClassSource> nestedTypes = new HashSet<>();
+        Queue<JavaClassSource> nestedTypes = new LinkedList<>();
         for (ComponentOptionModel option : model.getComponentOptions()) {
 
             if (skipComponentOption(model, option)) {
@@ -402,7 +404,15 @@ public class SpringBootAutoConfigurationMojo extends AbstractMojo {
 
         // add inner classes for nested AutoConfiguration options
         ClassLoader projectClassLoader = getProjectClassLoader();
-        for (JavaClassSource nestedType : nestedTypes) {
+        Set<String> processedTypes = new HashSet<>();
+        while (!nestedTypes.isEmpty()) {
+            JavaClassSource nestedType = nestedTypes.poll();
+
+            // skip already processed nested classes
+            if (processedTypes.contains(nestedType.getCanonicalName())) {
+                continue;
+            }
+            processedTypes.add(nestedType.getCanonicalName());
 
             final JavaClassSource innerClass = javaClass.addNestedType("public static class " + nestedType.getName() + INNER_TYPE_SUFFIX);
             // add source class name as a static field
@@ -421,7 +431,6 @@ public class SpringBootAutoConfigurationMojo extends AbstractMojo {
                 PropertySource<JavaClassSource> sourceProp = resolvedProperty.propertySource;
 
                 Type<JavaClassSource> propType = sourceProp.getType();
-                final PropertySource<JavaClassSource> prop = innerClass.addProperty(optionType, sourceProp.getName());
 
                 boolean anEnum;
                 Class optionClass;
@@ -431,6 +440,19 @@ public class SpringBootAutoConfigurationMojo extends AbstractMojo {
                 } else {
                     optionClass = null;
                     anEnum = false;
+                }
+
+                PropertySource<JavaClassSource> prop = null;
+                if (optionClass != null && !anEnum) {
+                    String type = optionClass.getName();
+                    JavaClassSource javaClassSource = readJavaType(type);
+                    // isNestedProperty can add the nested type to the queue
+                    if (isNestedProperty(nestedTypes, javaClassSource)) {
+                        prop = innerClass.addProperty(propType.getSimpleName() + INNER_TYPE_SUFFIX, sourceProp.getName());
+                    }
+                }
+                if (prop == null) {
+                    prop = innerClass.addProperty(optionType, sourceProp.getName());
                 }
 
                 // add nested configuration annotation for complex properties
@@ -581,7 +603,7 @@ public class SpringBootAutoConfigurationMojo extends AbstractMojo {
     }
 
     // it's a nested property if the source exists and it's not an abstract class in this project, e.g. endpoint configuration
-    private boolean isNestedProperty(Set<JavaClassSource> nestedTypes, JavaClassSource type) {
+    private boolean isNestedProperty(Collection<JavaClassSource> nestedTypes, JavaClassSource type) {
         if (type != null) {
             // nested type MUST have some properties of it's own, besides those from super class
             if (type.isClass() && !type.isEnum() && !type.isAbstract() && !type.getProperties().isEmpty()) {
@@ -608,6 +630,20 @@ public class SpringBootAutoConfigurationMojo extends AbstractMojo {
                         if (classSource instanceof JavaClassSource) {
                             nestedType = (JavaClassSource) classSource;
                             break;
+                        }
+                    } catch (FileNotFoundException e) {
+                        throw new IllegalArgumentException("Missing source file " + type);
+                    }
+                }
+            }
+
+            if (nestedType == null) {
+                File sourceFile = new File(SpringBootHelper.camelProjectRoot(baseDir, "camel-core"), "camel-core/src/main/java/" + fileName);
+                if (sourceFile.exists() && sourceFile.isFile()) {
+                    try {
+                        JavaType<?> classSource = Roaster.parse(sourceFile);
+                        if (classSource instanceof JavaClassSource) {
+                            nestedType = (JavaClassSource) classSource;
                         }
                     } catch (FileNotFoundException e) {
                         throw new IllegalArgumentException("Missing source file " + type);

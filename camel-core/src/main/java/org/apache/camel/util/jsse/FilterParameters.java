@@ -46,6 +46,15 @@ public class FilterParameters extends JsseParameters {
     }
 
     /**
+     * Sets the list of patterns to include.
+     *
+     * @param include the list of patterns to include
+     */
+    public void setInclude(List<String> include) {
+        this.include = include;
+    }
+
+    /**
      * Returns a live copy of the list of patterns to exclude.
      * This list takes precedence over the include patterns.
      *
@@ -57,7 +66,16 @@ public class FilterParameters extends JsseParameters {
         }
         return this.exclude;
     }
-    
+
+    /**
+     * Sets the list of patterns to exclude.
+     *
+     * @param exclude the list of patterns to exclude
+     */
+    public void setExclude(List<String> exclude) {
+        this.exclude = exclude;
+    }
+
     /**
      * Returns a list of compiled {@code Pattern}s based on the
      * values of the include list.
