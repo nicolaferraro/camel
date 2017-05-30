@@ -50,13 +50,15 @@ public class KubernetesLock implements Closeable {
     private final LeaderElectionCallback callback;
     private final KubernetesClient client;
 
+    private String endpointName;
+
     private String namespace;
-    private final String myPodId;
+    private final String id;
     private Watch podWatch = null;
     private Watch configMapWatch;
     private AtomicBoolean owner = new AtomicBoolean(false);
 
-    public KubernetesLock(KubernetesLeaderElectionConfig config, LeaderElectionCallback callback, KubernetesClient client) {
+    public KubernetesLock(String subject, KubernetesLeaderElectionConfig config, LeaderElectionCallback callback, KubernetesClient client) {
         this.config = config;
         this.callback = callback;
         this.client = client;
@@ -66,10 +68,12 @@ public class KubernetesLock implements Closeable {
             namespace = DEFAULT_NAMESPACE;
         }
 
-        this.myPodId = config.getId().orElse(System.getenv("HOSTNAME"));
-        if (isEmpty(myPodId)) {
+        this.id = System.getenv("HOSTNAME");
+        if (isEmpty(this.id)) {
             throw new IllegalArgumentException("Could not find this podName via $HOSTNAME environment variable!");
         }
+
+        this.endpointName = subject;
     }
 
     protected static boolean isEmpty(String ownerPodId) {
@@ -118,11 +122,11 @@ public class KubernetesLock implements Closeable {
                 data = new HashMap<>();
             }
 
-            String currentOwnerPodName = data.get(config.getEndpointName());
-            if (myPodId.equals(currentOwnerPodName)) {
+            String currentOwnerPodName = data.get(endpointName);
+            if (id.equals(currentOwnerPodName)) {
                 // we are already the owner
                 // e.g. the pod restarted
-                LOG.info("This pod " + myPodId + " already has the lock for endpoint: " + config.getEndpointName() + " in ConfigMap " + config.getConfigMapName());
+                LOG.info("This pod " + id + " already has the lock for endpoint: " + endpointName + " in ConfigMap " + config.getConfigMapName());
                 notifyHasLock();
                 return;
             }
@@ -133,7 +137,7 @@ public class KubernetesLock implements Closeable {
                     podWatch.close();
                 }
                 final String deadPodName = currentOwnerPodName;
-                LOG.info("Pod " + deadPodName + " has the lock for endpoint: " + config.getEndpointName() + " in ConfigMap " + config.getConfigMapName() + " so lets watch it...");
+                LOG.info("Pod " + deadPodName + " has the lock for endpoint: " + endpointName + " in ConfigMap " + config.getConfigMapName() + " so lets watch it...");
 
                 PodResource<Pod, DoneablePod> podResource = client.pods().inNamespace(namespace).withName(currentOwnerPodName);
                 podWatch = podResource.watch(new Watcher<Pod>() {
@@ -171,9 +175,9 @@ public class KubernetesLock implements Closeable {
 
             if (isEmpty(currentOwnerPodName)) {
                 // lets try claim the lock!
-                LOG.info("Trying to grab the lock for " + config.getEndpointName() + " in ConfigMap " + config.getConfigMapName());
+                LOG.info("Trying to grab the lock for " + endpointName + " in ConfigMap " + config.getConfigMapName());
 
-                data.put(config.getEndpointName(), myPodId);
+                data.put(endpointName, id);
                 try {
                     if (create) {
                         configMapResource.create(configMap);
@@ -205,7 +209,7 @@ public class KubernetesLock implements Closeable {
 
     protected void notifyHasLock() {
         owner.set(true);
-        callback.onLeadershipGranted(config.getSubject());
+        callback.onLeadershipChange(endpointName, true);
     }
 
     @Override

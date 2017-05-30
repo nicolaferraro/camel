@@ -13,28 +13,31 @@ public class KubernetesLeaderElectionService implements LeaderElectionService {
 
     private Map<String, KubernetesLock> lockManagers = new HashMap<>();
 
+    private KubernetesLeaderElectionConfig config;
+
     private KubernetesClient client = new DefaultKubernetesClient();
 
     private boolean started;
 
-    public KubernetesLeaderElectionService() {
+    public KubernetesLeaderElectionService(KubernetesLeaderElectionConfig config) {
+        this.config = config;
     }
 
     @Override
-    public void participate(LeaderElectionConfig config, LeaderElectionCallback callback) {
-        if (lockManagers.containsKey(config.getSubject())) {
-            throw new IllegalStateException("Leader election service is already participating on subject " + config.getSubject());
+    public void join(String subject, LeaderElectionCallback callback) {
+        if (lockManagers.containsKey(subject)) {
+            throw new IllegalStateException("Leader election service is already participating on subject " + subject);
         }
-        KubernetesLock lock = new KubernetesLock((KubernetesLeaderElectionConfig) config, callback, client);
-        lockManagers.put(config.getSubject(), lock);
+        KubernetesLock lock = new KubernetesLock(subject, config, callback, client);
+        lockManagers.put(subject, lock);
         if (started) {
             lock.tryAcquireLock();
         }
     }
 
     @Override
-    public void dismiss(LeaderElectionConfig config) {
-        lockManagers.remove(config.getSubject()).close();
+    public void leave(String subject) {
+        lockManagers.remove(subject).close();
     }
 
     @Override

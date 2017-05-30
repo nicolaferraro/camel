@@ -13,13 +13,12 @@ public class KubernetesRoutePolicyIT {
     @Test
     public void test() throws Exception {
 
-        KubernetesLeaderElectionConfig config = new KubernetesLeaderElectionConfig("aaaaa");
+        KubernetesLeaderElectionConfig config = new KubernetesLeaderElectionConfig();
         config.setConfigMapName("aaaaa");
-        config.setEndpointName("bbbbb");
         config.setNamespace("myproject");
 
-        KubernetesLeaderElectionService ser = new KubernetesLeaderElectionService();
-        LeaderRoutePolicy policy = new LeaderRoutePolicy(ser, config);
+        KubernetesLeaderElectionService ser = new KubernetesLeaderElectionService(config);
+        LeaderRoutePolicy policy = new LeaderRoutePolicy(ser, "myroute");
 
         CamelContext ctx = new DefaultCamelContext();
         ctx.addService(ser, true, false);

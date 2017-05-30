@@ -7,8 +7,8 @@ import org.apache.camel.Service;
  */
 public interface LeaderElectionService extends Service {
 
-    void participate(LeaderElectionConfig config, LeaderElectionCallback callback);
+    void join(String subject, LeaderElectionCallback callback);
 
-    void dismiss(LeaderElectionConfig config);
+    void leave(String subject);
 
 }

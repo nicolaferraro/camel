@@ -1,24 +1,15 @@
 package org.apache.camel.component.kubernetes.policy;
 
-import io.fabric8.kubernetes.client.KubernetesClient;
-
 /**
  * Created by nferraro on 5/26/17.
  */
-public class KubernetesLeaderElectionConfig extends LeaderElectionConfig {
+public class KubernetesLeaderElectionConfig {
 
     private String namespace;
 
     private String configMapName;
 
-    private String endpointName;
-
-    public KubernetesLeaderElectionConfig(String subject) {
-        this(subject, null);
-    }
-
-    public KubernetesLeaderElectionConfig(String subject, String id) {
-        super(subject, id);
+    public KubernetesLeaderElectionConfig() {
     }
 
     public String getNamespace() {
@@ -37,11 +28,4 @@ public class KubernetesLeaderElectionConfig extends LeaderElectionConfig {
         this.configMapName = configMapName;
     }
 
-    public String getEndpointName() {
-        return endpointName;
-    }
-
-    public void setEndpointName(String endpointName) {
-        this.endpointName = endpointName;
-    }
 }

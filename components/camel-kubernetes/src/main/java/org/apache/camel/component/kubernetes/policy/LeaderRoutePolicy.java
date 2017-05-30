@@ -45,11 +45,11 @@ public class LeaderRoutePolicy extends RoutePolicySupport implements CamelContex
     private boolean shouldStopRoute;
 
     private LeaderElectionService leaderElectionService;
-    private LeaderElectionConfig config;
+    private String subject;
 
-    public LeaderRoutePolicy(LeaderElectionService leaderElectionService, LeaderElectionConfig config) {
+    public LeaderRoutePolicy(LeaderElectionService leaderElectionService, String subject) {
         this.leaderElectionService = leaderElectionService;
-        this.config = config;
+        this.subject = subject;
         this.stoppeddRoutes = new HashSet<>();
         this.startedRoutes = new HashSet<>();
         this.leader = new AtomicBoolean(false);
@@ -96,18 +96,7 @@ public class LeaderRoutePolicy extends RoutePolicySupport implements CamelContex
         ObjectHelper.notNull(camelContext, "camelContext", this);
 
         try {
-            this.leaderElectionService.participate(this.config, new LeaderElectionCallback() {
-                @Override
-                public void onLeadershipGranted(String subject) {
-                    setLeader(true);
-                }
-
-                @Override
-                public void onLeadershipRevoked(String subject) {
-                    setLeader(false);
-                }
-            });
-
+            this.leaderElectionService.join(this.subject, (subject, leader) -> setLeader(leader));
 
         } catch (Exception e) {
             throw new RuntimeCamelException(e);
@@ -115,15 +104,15 @@ public class LeaderRoutePolicy extends RoutePolicySupport implements CamelContex
     }
 
     private void stopService() {
-        this.leaderElectionService.dismiss(config);
+        this.leaderElectionService.leave(this.subject);
     }
 
     private void setLeader(boolean isLeader) {
         if (isLeader && leader.compareAndSet(false, isLeader)) {
-            LOGGER.info("Leadership taken (service={}, config={})", leaderElectionService, config);
+            LOGGER.info("Leadership taken (service={}, subject={})", leaderElectionService, subject);
             startManagedRoutes();
         } else if (!isLeader && leader.getAndSet(isLeader)) {
-            LOGGER.info("Leadership lost (service={}, config={})", leaderElectionService, config);
+            LOGGER.info("Leadership lost (service={}, subject={})", leaderElectionService, subject);
             stopManagedRoutes();
         }
     }
