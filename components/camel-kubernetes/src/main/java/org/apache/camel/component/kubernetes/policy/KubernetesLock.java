@@ -182,7 +182,9 @@ public class KubernetesLock implements Closeable {
                     if (create) {
                         configMapResource.create(configMap);
                     } else {
-                        configMapResource.patch(configMap);
+                        configMapResource
+                                .lockResourceVersion(configMap.getMetadata().getResourceVersion())
+                                .replace(configMap);
                     }
                     String operation = create ? "Created" : "Updated";
                     LOG.info(operation + " ConfigMap: " + config.getConfigMapName() + " with data " + configMap.getData());
